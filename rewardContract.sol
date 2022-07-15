@@ -95,7 +95,7 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
         return amount;
     }
 
-// remove the match ID from the array
+// remove the match ID from matchIDs array
     function array_remove(uint256 matchID) private 
     {
         for (uint i = 0; i < matchIDs.length; i++) 
