@@ -41,14 +41,18 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
         payable
     {
         require(isPaused == false, "The contract is paused by owner");
-        require(amount > 0, "The amount can't be zero.");
+        require(amount >= 20, "Minumum limit is 20 tickets");
         require(minted - amount >= 0, "Minted tokens are less than your amount");
-        require(address(this).balance >= amount * rate , "Not enough balance in contract");
+        
+        uint256 tax = (amount * rate) / 20;
+        uint256 remainingBalance = (amount * rate) - tax;
+
+        require(address(this).balance >= remainingBalance , "Not enough balance in contract");
         
         burn(msg.sender, 1, amount);
         minted -= amount;
 
-        payable(msg.sender).transfer(amount * rate);
+        payable(msg.sender).transfer(remainingBalance);
     }
 
 // withdraw the money to owner address
@@ -58,25 +62,29 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
     }
 
 // deduct a ticket for enterence in match
-    function deductTicket(uint256 matchID) public payable
+    function deductTicket(address client,uint256 matchID) public payable
     {   
         require(isPaused == false, "The contract is paused by owner");
-        require(balanceOf(msg.sender,1) > 0, "Not enough tickets");
+        require(balanceOf(client,1) > 0, "Not enough tickets");
 
         matchIDs.push(matchID);
-        safeTransferFrom(msg.sender,payable(owner()),1,1,"");
+        safeTransferFrom(client,payable(owner()),1,1,"");
     }
 
 // reward the user his winning amount
      function rewardUser(address client, uint256 matchID) public payable
     {
         require(isPaused == false, "The contract is paused by owner");
-        uint256 amount = array_exists(matchID);
-        require(amount  > 0, "Invalid matchID");
-        require(balanceOf(owner(),1) >= amount, "Not enough tickets in contract");
+        uint256 totalAmount = array_exists(matchID);
+        require(totalAmount  > 0, "Invalid matchID");
+
+        uint256 tax = totalAmount / 5;
+        uint256 remainingAmount = totalAmount - tax;
+
+        require(balanceOf(owner(),1) >= remainingAmount, "Not enough tickets in contract");
 
         array_remove(matchID);
-        safeTransferFrom(owner(),client,1,amount,"");
+        safeTransferFrom(owner(),client,1, remainingAmount,"");
     }
 
 // check if the array have the match ID
