@@ -4,13 +4,16 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts@4.7.0/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts@4.7.0/access/Ownable.sol";
 import "@openzeppelin/contracts@4.7.0/token/ERC1155/extensions/ERC1155Burnable.sol";
+import "@openzeppelin/contracts@4.7.0/token/ERC20/ERC20.sol";
 
 contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
 
     uint256 minted = 0;
-    uint256 rate = 1 ether;
+    uint256 rate = 10000000;
     uint256[] matchIDs;
     bool isPaused;
+
+    ERC20 token = ERC20(0xEdf53026aeA60f8F75FcA25f8830b7e2d6200662);
 
     constructor() ERC1155("https://subrays.com/token_data/token_metadata.json") {}
 
@@ -22,6 +25,10 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
         isPaused = value;
     }
 
+    function changeToken(ERC20 newToken) public onlyOwner{
+        token = newToken;
+    }
+
 // mint the token and take money from user 
     function buyTicket(uint256 amount)
         public
@@ -29,8 +36,9 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
     {
         require(isPaused == false, "The contract is paused by owner");
         require(amount > 0, "The amount can't be zero.");
-        require(msg.value >= amount * rate , "Not enough balance to buy");
-
+        require(token.balanceOf(msg.sender) >= amount * rate , "Not enough balance to buy");
+        
+        token.transferFrom(msg.sender,address(this), amount * rate);
         _mint(msg.sender, 1, amount, "");
         minted += amount;
     }
@@ -47,18 +55,18 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
         uint256 tax = (amount * rate) / 20;
         uint256 remainingBalance = (amount * rate) - tax;
 
-        require(address(this).balance >= remainingBalance , "Not enough balance in contract");
+        require(token.balanceOf(address(this)) >= remainingBalance , "Not enough balance in contract");
         
         burn(msg.sender, 1, amount);
         minted -= amount;
 
-        payable(msg.sender).transfer(remainingBalance);
+        token.transfer(payable(msg.sender), remainingBalance);
     }
 
 // withdraw the money to owner address
     function withdraw() public onlyOwner{
-        require (address(this).balance > 0, "Balance is zero.");
-        payable(owner()).transfer(address(this).balance);
+        require (token.balanceOf(address(this)) > 0, "Balance is zero.");
+        token.transfer(payable(owner()), token.balanceOf(address(this)));
     }
 
 // deduct a ticket for enterence in match
