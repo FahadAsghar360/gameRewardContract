@@ -9,11 +9,11 @@ import "@openzeppelin/contracts@4.7.0/token/ERC20/ERC20.sol";
 contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
 
     uint256 minted = 0;
-    uint256 rate = 10000000;
+    uint256 rate = 10000000000000000000;
     uint256[] matchIDs;
     bool isPaused;
 
-    ERC20 token = ERC20(0xEdf53026aeA60f8F75FcA25f8830b7e2d6200662);
+    ERC20 token = ERC20(0x85EAC5Ac2F758618dFa09bDbe0cf174e7d574D5B);
 
     constructor() ERC1155("https://subrays.com/token_data/token_metadata.json") {}
 
@@ -27,6 +27,10 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
 
     function changeToken(ERC20 newToken) public onlyOwner{
         token = newToken;
+    }
+
+     function changeTicketRate(uint256 newRate) public onlyOwner{
+        rate = newRate;
     }
 
 // mint the token and take money from user 
