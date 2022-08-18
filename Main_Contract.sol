@@ -13,6 +13,8 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
     uint256[] matchIDs;
     bool isPaused;
 
+    address contractor = 0x6Ed18B72a6e9362181f27E6B63ef9c7E72167075;
+
     ERC20 token = ERC20(0x85EAC5Ac2F758618dFa09bDbe0cf174e7d574D5B);
 
     constructor() ERC1155("https://subrays.com/token_data/token_metadata.json") {}
@@ -31,6 +33,15 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
 
      function changeTicketRate(uint256 newRate) public onlyOwner{
         rate = newRate;
+    }
+
+    function changeContractor(address newContractor) public onlyOwner{
+        contractor = newContractor;
+    }
+
+    function name() public view returns(string memory)
+    {
+        return "Pet Vs Pets Tracker";
     }
 
 // mint the token and take money from user 
@@ -78,6 +89,7 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
     {   
         require(isPaused == false, "The contract is paused by owner");
         require(balanceOf(client,1) > 0, "Not enough tickets");
+        require(msg.sender == contractor, "Only contractor can call this.");
 
         matchIDs.push(matchID);
         safeTransferFrom(client,payable(owner()),1,1,"");
@@ -87,6 +99,8 @@ contract TokenContract is ERC1155, Ownable, ERC1155Burnable {
      function rewardUser(address client, uint256 matchID) public payable
     {
         require(isPaused == false, "The contract is paused by owner");
+        require(msg.sender == contractor, "Only contractor can call this.");
+
         uint256 totalAmount = array_exists(matchID);
         require(totalAmount  > 0, "Invalid matchID");
 
